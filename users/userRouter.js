@@ -22,11 +22,27 @@ function validId(id, res) {
 //**********************Vanesa's functions**********************
 
 router.post('/', (req, res) => {
-
+    const newUser = req.body;
+    if(!newUser.name){
+     res.status(400).json({ errorMessage: "Please provide the new user's name" });
+    }
+    else{
+        userDB.insert(newUser)
+        .then(u => {
+            res.status(201).json(u);
+        })
+        .catch(error => {
+            console.log(error);
+            res.status(500).json({ error: "There was an error while saving the new user to the database" });
+        });
+    }
 });
 
 router.post('/:id/posts', (req, res) => {
-
+   const { posts } = req.body;
+//    if(!postI.title && !postI.contents){
+//     res.status(400).json({ errorMessage: "Please provide title and contents for the post." });
+//    }
 });
 
 router.get('/', (req, res) => {
@@ -55,9 +71,7 @@ router.get('/:id/posts', (req, res) => {
            else {
                 res.status(404).json({ message: "The user with the specified ID does not exist." });
            }
-                
-         
-            
+  
         })
         .catch(error => {
             console.log("error in GET users/id/posts", error);
@@ -67,7 +81,20 @@ router.get('/:id/posts', (req, res) => {
 });
 
 router.delete('/:id', (req, res) => {
-
+    const { id } = req.params;
+    userDB.remove(id)
+        .then(change => {
+            if(change){
+                res.status(200).json(change);
+            }
+            else{
+                res.status(404).json({ message: `The user with the specified ID ${id} does not exist.` });
+            }
+        })
+        .catch(error => {
+            res.status(500).json({ error: "The user's information could not be deleted." });
+        });
+    
 });
 
 router.put('/:id', (req, res) => {
