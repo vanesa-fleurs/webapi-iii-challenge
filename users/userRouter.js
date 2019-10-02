@@ -3,6 +3,24 @@ const express = require('express');
 const userDB = require('./userDb.js');
 const router = express.Router();
 
+//**********************Vanesa's functions********************** 
+function validId(id, res) {
+    return userDB.getById(id)
+    .then(user => {
+        if (user){
+            res.status(200).json(user);
+        } 
+        else{
+            res.status(404).json({ message: "The user with the specified ID does not exist." });
+        }
+    })
+    .catch(error => {
+        console.log("error in GET users/:id", error);
+        res.status(500).json({error: `error getting the specific user with ${id}`})
+    })  
+}
+//**********************Vanesa's functions**********************
+
 router.post('/', (req, res) => {
 
 });
@@ -24,23 +42,27 @@ router.get('/', (req, res) => {
 
 router.get('/:id', (req, res) => {
     const { id } = req.params;
-    userDB.getById(id)
-    .then(user => {
-        if (user){
-            res.status(200).json(user);
-        } 
-        else{
-            res.status(404).json({ message: "The user with the specified ID does not exist." });
-        }
-    })
-    .catch(error => {
-        console.log("error in GET users/:id", error);
-        res.status(500).json({error: `error getting the specific user with ${id}`})
-    })
-
+    validId(id, res);
 });
 
 router.get('/:id/posts', (req, res) => {
+    const { id } = req.params;
+    userDB.getUserPosts(id)
+        .then(userPosts => {
+           if(userPosts.length){
+               res.status(200).json(userPosts);
+           }
+           else {
+                res.status(404).json({ message: "The user with the specified ID does not exist." });
+           }
+                
+         
+            
+        })
+        .catch(error => {
+            console.log("error in GET users/id/posts", error);
+            res.status(500).json({error: `error getting user ${id}'s posts!`});
+        });
 
 });
 
