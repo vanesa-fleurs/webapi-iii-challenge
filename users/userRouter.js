@@ -1,6 +1,7 @@
 const express = require('express');
 
 const userDB = require('./userDb.js');
+const postDB = require('../posts/postDb.js');
 const router = express.Router();
 
 //**********************Vanesa's functions********************** 
@@ -21,6 +22,10 @@ function validId(id, res) {
 }
 //**********************Vanesa's functions**********************
 
+
+
+
+//**********************POST**********************
 router.post('/', (req, res) => {
     const newUser = req.body;
     if(!newUser.name){
@@ -38,13 +43,85 @@ router.post('/', (req, res) => {
     }
 });
 
+//**********************POST**********************
 router.post('/:id/posts', (req, res) => {
-   const { posts } = req.body;
-//    if(!postI.title && !postI.contents){
-//     res.status(400).json({ errorMessage: "Please provide title and contents for the post." });
-//    }
+   const { id } = req.params;
+   const postInfo = {...req.body, user_id: id}
+   console.log("postInfo = req.body", postInfo);
+//    if(!post.text){
+//     res.status(400).json({ message: "Please provide title and contents for the post." });
+//     }
+
+    // else {
+    postDB.insert(postInfo)
+    .then(user => {
+        console.log("user in POST for /:id/posts", user)
+        res.status(210).json(user);
+        // if (user){
+        //     //then look add post:
+        //     userDB.update(id, post)
+        //         .then(newPost => {
+        //             console.log("newPosts", newPost);
+        //             if(newPosts > 0) {
+        //                 res.status(201).json(newPost);
+        //             }
+        //             else{
+        //                 res.status(404).json({message: `please insert a text for user ${id}s new post!`})
+        //             }
+        //         })
+        //         .catch(error => {
+        //             console.log("error in making a post", error);
+        //             res.status(500).json({message: `error in CATCH for POSTS entering the post for ${id} `})
+        //         });
+
+        // } 
+        // else{
+        //     res.status(404).json({ message: "The user with the specified ID does not exist." });
+        // }
+    })
+    .catch(error => {
+        console.log("error!!",error)
+        res.status(500).json({error: `error getting the specific user with ID:${id}`})
+    });
+
+    // }
+
+//************************************************************************************
+
+    // userDB.getById(id)
+    // .then(user => {
+    //     console.log("user in POST for /:id/posts", user)
+
+    //     if (user){
+    //         //then look add post:
+    //         userDB.update(id, posts)
+    //             .then(newPost => {
+    //                 console.log("newPosts", newPost);
+    //                 if(posts > 0) {
+    //                     res.status(201).json(newPost);
+    //                 }
+    //                 else{
+    //                     res.status(404).json({message: `please insert a text for user ${id}s new post!`})
+    //                 }
+    //             })
+    //             .catch(error => {
+    //                 res.status(500).json({message: `error in CATCH for POSTS entering the post for ${id} `})
+    //             });
+
+    //     } 
+    //     else{
+    //         res.status(404).json({ message: "The user with the specified ID does not exist." });
+    //     }
+    // })
+    // .catch(error => {
+    //     res.status(500).json({error: `error getting the specific user with ID:${id}`})
+    // });
+
+    //******************************************************************************************************************************
 });
 
+
+//**********************GET**********************
 router.get('/', (req, res) => {
     userDB.get(req.query)
         .then(users => {
@@ -56,12 +133,14 @@ router.get('/', (req, res) => {
         })
 });
 
+//**********************GET**********************
 router.get('/:id', (req, res) => {
     const { id } = req.params;
     validId(id, res);
 });
 
-router.get('/:id/posts', (req, res) => {
+//**********************GET**********************
+router.get('/:id/posts', validateUserId, (req, res) => {
     const { id } = req.params;
     userDB.getUserPosts(id)
         .then(userPosts => {
@@ -80,6 +159,7 @@ router.get('/:id/posts', (req, res) => {
 
 });
 
+//**********************DELETE**********************
 router.delete('/:id', (req, res) => {
     const { id } = req.params;
     userDB.remove(id)
@@ -92,19 +172,30 @@ router.delete('/:id', (req, res) => {
             }
         })
         .catch(error => {
+            console.log(error);
             res.status(500).json({ error: "The user's information could not be deleted." });
         });
-    
 });
 
+//**********************PUT**********************
 router.put('/:id', (req, res) => {
 
 });
 
-//custom middleware
+
+//**********************CUSTOM MIDDLEWARE**********************
+
 
 function validateUserId(req, res, next) {
-
+    const { id } = req.params
+    userDB.getById(id) 
+    if(id) {
+        next();
+     }
+     else{
+        res.status(401).json({message: `error, user doesn't exist`})
+     }
+    
 };
 
 function validateUser(req, res, next) {
